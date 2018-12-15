@@ -59,9 +59,11 @@ namespace MultiThreadServer
 
         public void ClientManager(Socket client)
         {
+            bool connected = true;
+
             copyRecieved = true;
             dataSended = true;
-            Thread bieb = new Thread(() => ClientReciever(client));
+            Thread bieb = new Thread(() => ClientReciever(client, ref connected));
             bieb.Start();
             while (true)
             {
@@ -70,7 +72,6 @@ namespace MultiThreadServer
                     clientprocessing = true;
                     if (!copyRecieved)
                     {
-                        MessageBox.Show("0 Success");
                         formulario.AddLogData((int)client.AddressFamily, (int)client.ProtocolType, (IPEndPoint)client.LocalEndPoint, dataReceived);
                         copyRecieved = true;
                     }
@@ -85,14 +86,12 @@ namespace MultiThreadServer
             }
         }
 
-        public void ClientReciever(Socket client)
+        public void ClientReciever(Socket client, ref bool connected)
         {
-            bool connected = true;
             while (connected)
             {
                 if (IsSocketConnected(client))
                 {
-                    MessageBox.Show(Convert.ToString(client.Connected));
                     byte[] a = new byte[255];
                     client.Receive(a);
                     while (!copyRecieved)
@@ -102,7 +101,7 @@ namespace MultiThreadServer
                     dataReceived = a;
                     copyRecieved = false;
                 }
-                else { connected = false; MessageBox.Show("Disconnected"); }
+                else { connected = false; }
             }
         }
 
