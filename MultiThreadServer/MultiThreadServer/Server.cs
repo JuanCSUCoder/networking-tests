@@ -70,6 +70,7 @@ namespace MultiThreadServer
                     clientprocessing = true;
                     if (!copyRecieved)
                     {
+                        MessageBox.Show("0 Success");
                         formulario.AddLogData((int)client.AddressFamily, (int)client.ProtocolType, (IPEndPoint)client.LocalEndPoint, dataReceived);
                         copyRecieved = true;
                     }
@@ -86,18 +87,33 @@ namespace MultiThreadServer
 
         public void ClientReciever(Socket client)
         {
-            while (true)
+            bool connected = true;
+            while (connected)
             {
-
-                byte[] a = new byte[255];
-                client.Receive(a);
-                while (!copyRecieved)
+                if (IsSocketConnected(client))
                 {
-                    Thread.Sleep(50);
+                    MessageBox.Show(Convert.ToString(client.Connected));
+                    byte[] a = new byte[255];
+                    client.Receive(a);
+                    while (!copyRecieved)
+                    {
+                        Thread.Sleep(50);
+                    }
+                    dataReceived = a;
+                    copyRecieved = false;
                 }
-                dataReceived = a;
-                copyRecieved = false;
+                else { connected = false; MessageBox.Show("Disconnected"); }
             }
+        }
+
+        public bool IsSocketConnected(Socket s)
+        {
+            bool part1 = s.Poll(1000, SelectMode.SelectRead);
+            bool part2 = (s.Available == 0);
+            if (part1 && part2)
+                return false;
+            else
+                return true;
         }
 
     }
