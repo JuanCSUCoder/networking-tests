@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 using System.Net;
 using System.Net.Sockets;
-
 using System.Threading;
+using System.Windows.Forms;
+using MultiThreadServer;
 
 namespace MultiThreadServer
 {
@@ -19,18 +20,30 @@ namespace MultiThreadServer
         public bool dataSended;
         public byte[] dataToSend;
 
-        public void Start(Socket a, IPEndPoint iPEnd)
-        {
-            a.Bind(iPEnd);
-            a.Listen(int.MaxValue);
+        public bool clientprocessing;
 
-            Thread bla = new Thread(() => ServerLife(a));
+        Form1 formulario;
+
+        public Server(Form1 oliguis)
+        {
+            formulario = oliguis;
         }
 
-        public void ServerLife(Socket a)
+        public void Start(Socket a, IPEndPoint iPEnd)
         {
+
+            Thread bla = new Thread(() => ServerLife(a, iPEnd));
+            bla.Start();
+        }
+
+        public void ServerLife(Socket a, IPEndPoint iPEnd)
+        {
+
+            a.Bind(iPEnd);
+            a.Listen(int.MaxValue);
             while (true)
             {
+
                 Socket client = a.Accept();
 
                 Thread clientManag = new Thread(() => ClientManager(client));
@@ -46,18 +59,28 @@ namespace MultiThreadServer
 
         public void ClientManager(Socket client)
         {
+            copyRecieved = true;
+            dataSended = true;
+            Thread bieb = new Thread(() => ClientReciever(client));
+            bieb.Start();
             while (true)
             {
-                if (!copyRecieved)
+                if (!clientprocessing)
                 {
-                    Form1.AddLogData((int)client.AddressFamily,(int)client.ProtocolType,(IPEndPoint)client.LocalEndPoint);
-                    copyRecieved = true;
+                    clientprocessing = true;
+                    if (!copyRecieved)
+                    {
+                        formulario.AddLogData((int)client.AddressFamily, (int)client.ProtocolType, (IPEndPoint)client.LocalEndPoint, dataReceived);
+                        copyRecieved = true;
+                    }
+                    if (!dataSended)
+                    {
+                        client.Send(dataToSend);
+                        dataSended = true;
+                    }
                 }
-                if (!dataSended)
-                {
-                    client.Send(dataToSend);
-                    dataSended = true;
-                }
+                else { Thread.Sleep(10); }
+                clientprocessing = false;
             }
         }
 
@@ -65,6 +88,7 @@ namespace MultiThreadServer
         {
             while (true)
             {
+
                 byte[] a = new byte[255];
                 client.Receive(a);
                 while (!copyRecieved)
@@ -72,6 +96,7 @@ namespace MultiThreadServer
                     Thread.Sleep(50);
                 }
                 dataReceived = a;
+                copyRecieved = false;
             }
         }
 

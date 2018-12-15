@@ -9,9 +9,9 @@ using System.Net.Sockets;
 
 namespace MultiThreadServer
 {
-    class ServerLoader
+    class ServerUDP
     {
-        public ServerLoader(int family,int protocol ,IPAddress ip, Int32 port)
+        public ServerUDP(int family,int protocol ,IPAddress ip, Int32 port)
         {
 
         }
